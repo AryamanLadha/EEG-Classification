@@ -10,14 +10,15 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras import regularizers
+from tensorflow.keras import layers
 
 
-class RNN(X):
+class RNN:
   
-  def __init__(self):
+  def __init__(self, X):
       super().__init__()
       self.in_shape = X.shape[1:]
-      self.model = keras.Sequential()
+      
       
       
   def LSTM(self):
@@ -42,7 +43,7 @@ class RNN(X):
       
   def GRU(self):
     
-      
+      self.model = K.Sequential()
       self.model.add(layers.Embedding(input_dim=self.in_shape, output_dim=64))
       # The output of GRU will be a 3D tensor of shape (batch_size, timesteps, 256)
       self.model.add(layers.GRU(256, return_sequences=True))
@@ -53,7 +54,7 @@ class RNN(X):
       
       
     
-  def fit_model(X_train, y_train, X_test, y_test):
+  def fit_model(self, X_train, y_train, X_test, y_test):
     
       opt_adam = K.optimizers.Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
       self.model.compile(loss='categorical_crossentropy' , optimizer=opt_adam, metrics=['categorical_accuracy'])
@@ -64,9 +65,9 @@ class RNN(X):
       
       return history
     
-  def evaluate(X,y):
+  def evaluate(self, X, y):
     
-      model.evaluate(X,y)
+      self.model.evaluate(X,y)
 
         
     
