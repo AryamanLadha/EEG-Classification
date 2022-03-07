@@ -15,9 +15,9 @@ from tensorflow.keras import layers
 
 class RNN:
   
-  def __init__(self, X):
+  def __init__(self, in_shape):
       super().__init__()
-      self.in_shape = X.shape[1:]
+      self.in_shape = in_shape
       
       
       
@@ -26,18 +26,19 @@ class RNN:
 
       #base model
       inputs = Input(shape=self.in_shape, name='eeg_in')
-      LSTM_1, state_h1, state_c1 = LSTM(128, dropout=0.5, return_sequences=True, return_state= True)(inputs)
-      LSTM_2, state_h2, state_c2 = LSTM(128, dropout=0.5, return_sequences=True, return_state= True)(LSTM_1)
-      LSTM_3, state_h3, state_c3 = LSTM(128, dropout=0.5, return_sequences=True, return_state= True)(LSTM_2)
-      LSTM_4, state_h4, state_c4 = LSTM(128, dropout=0.5, return_sequences=True, return_state= True)(LSTM_3)
+      
+      LSTM_1, state_h1, state_c1 = LSTM(64, dropout=0.5, return_sequences=True, return_state= True)(inputs)
+      LSTM_2, state_h2, state_c2 = LSTM(64, dropout=0.5, return_sequences=True, return_state= True)(LSTM_1)
+      LSTM_3, state_h3, state_c3 = LSTM(64, dropout=0.5, return_sequences=True, return_state= True)(LSTM_2)
+      LSTM_4, state_h4, state_c4 = LSTM(64, dropout=0.5, return_sequences=True, return_state= True)(LSTM_3)
 
 
-      lstm_out = tf.reshape(state_h4, shape=[-1, 128, 1], name='lstm_out')
+      lstm_out = tf.reshape(state_h4, shape=[-1, 64, 1], name='lstm_out')
       lstm_flat = Flatten()(lstm_out)
       predictions = Dense(4, activation='softmax', name = 'dense2')(lstm_flat)
 
       self.model = Model(inputs=inputs,outputs=predictions) 
-      self.model.summary()
+      #self.model.summary()
       
             
       
@@ -50,18 +51,18 @@ class RNN:
       # The output of SimpleRNN will be a 2D tensor of shape (batch_size, 128)
       self.model.add(layers.SimpleRNN(128))
       self.model.add(layers.Dense(4))
-      self.model.summary()
+      #self.model.summary()
       
       
     
-  def fit_model(self, X_train, y_train, X_test, y_test):
+  def fit_model(self, X, y, X0, y0):
     
       opt_adam = K.optimizers.Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
       self.model.compile(loss='categorical_crossentropy' , optimizer=opt_adam, metrics=['categorical_accuracy'])
       es = EarlyStopping(monitor='val_categorical_accuracy', mode='max', verbose=1, patience=30)
       #mc = ModelCheckpoint(os.path.join(SAVEPATH, BESTMODEL), monitor='val_categorical_accuracy', mode='max', verbose=1, save_best_only=True)
-      history = self.model.fit(x=X_train, y=y_train, epochs=15, shuffle=True, 
-                    verbose=1, validation_data = (X_test, y_test), callbacks=[es])
+      history = self.model.fit(x=X, y=y, epochs=15, shuffle=True, 
+                    verbose=1, validation_data = (X0, y0), callbacks=[es])
       
       return history
     
