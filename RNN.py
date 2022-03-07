@@ -19,7 +19,7 @@ X_train, y_train, X_valid, y_valid, X_test, y_test = getData()
 
 RNN_network = RNN(X_train)
 RNN_network.LSTM()
-history = fit_model(X_train, y_train, X_valid, y_valid)
+history = RNN_network.fit_model(X_train, y_train, X_valid, y_valid)
 
 plt.figure()
 plt.plot(history['val_categorical_accuracy'])
@@ -30,7 +30,7 @@ RNN_network.evaulate(X_test,y_test)
 
 RNN_network = RNN(X_train)
 RNN_network.GRU()
-history = fit_model(X_train, y_train, X_valid, y_valid)
+history = RNN_network.fit_model(X_train, y_train, X_valid, y_valid)
 
 plt.figure()
 plt.plot(history['val_categorical_accuracy'])
