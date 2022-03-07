@@ -63,6 +63,10 @@ class RNN(X):
                     verbose=1, validation_data = (X_test, y_test), callbacks=[es])
       
       return history
+    
+  def evaluate(X,y):
+    
+      model.evaluate(X,y)
 
         
     
