@@ -17,6 +17,8 @@ class RNN(X):
   def __init__(self):
       super().__init__()
       self.in_shape = X.shape[1:]
+      self.model = keras.Sequential()
+      
       
   def LSTM(self):
         
@@ -33,33 +35,31 @@ class RNN(X):
       lstm_flat = Flatten()(lstm_out)
       predictions = Dense(4, activation='softmax', name = 'dense2')(lstm_flat)
 
-      lstm_model = Model(inputs=inputs,outputs=predictions) 
-      lstm_model.summary()
+      self.model = Model(inputs=inputs,outputs=predictions) 
+      self.model.summary()
       
-      return lstm_model
-      
-      
+            
       
   def GRU(self):
     
-      model = keras.Sequential()
-      model.add(layers.Embedding(input_dim=self.in_shape, output_dim=64))
-      # The output of GRU will be a 3D tensor of shape (batch_size, timesteps, 256)
-      model.add(layers.GRU(256, return_sequences=True))
-      # The output of SimpleRNN will be a 2D tensor of shape (batch_size, 128)
-      model.add(layers.SimpleRNN(128))
-      model.add(layers.Dense(4))
-      model.summary()
       
-      return model
+      self.model.add(layers.Embedding(input_dim=self.in_shape, output_dim=64))
+      # The output of GRU will be a 3D tensor of shape (batch_size, timesteps, 256)
+      self.model.add(layers.GRU(256, return_sequences=True))
+      # The output of SimpleRNN will be a 2D tensor of shape (batch_size, 128)
+      self.model.add(layers.SimpleRNN(128))
+      self.model.add(layers.Dense(4))
+      self.model.summary()
+      
+      
     
-  def fit_model(X_train, y_train, X_test, y_test, model):
+  def fit_model(X_train, y_train, X_test, y_test):
     
       opt_adam = K.optimizers.Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-      model.compile(loss='categorical_crossentropy' , optimizer=opt_adam, metrics=['categorical_accuracy'])
+      self.model.compile(loss='categorical_crossentropy' , optimizer=opt_adam, metrics=['categorical_accuracy'])
       es = EarlyStopping(monitor='val_categorical_accuracy', mode='max', verbose=1, patience=30)
       #mc = ModelCheckpoint(os.path.join(SAVEPATH, BESTMODEL), monitor='val_categorical_accuracy', mode='max', verbose=1, save_best_only=True)
-      history = lstm_model.fit(x=X_train, y=y_train, epochs=15, shuffle=True, 
+      history = self.model.fit(x=X_train, y=y_train, epochs=15, shuffle=True, 
                     verbose=1, validation_data = (X_test, y_test), callbacks=[es])
       
       return history
