@@ -27,32 +27,36 @@ class BasicCNN(nn.Module):
         self.conv1 = nn.Conv2d(in_channels=22, out_channels=25, kernel_size=(10,1), padding='same') 
         self.pool1 = nn.MaxPool2d(kernel_size=(3, 1), padding=(1,0), stride=1)
         self.batchnorm1 = nn.BatchNorm2d(num_features=25)
+        self.dropout1 = nn.Dropout(p=0.4)
         
         
         # Conv layer 2
         self.conv2 = nn.Conv2d(in_channels=25, out_channels=50, kernel_size=(10,1), padding='same')
         self.pool2 = nn.MaxPool2d(kernel_size=(3, 1), padding=(1,0), stride=1)
         self.batchnorm2 = nn.BatchNorm2d(num_features=50)
+        self.dropout2 = nn.Dropout(p=0.4)
         
         # Conv layer 3
         self.conv3 = nn.Conv2d(in_channels=50, out_channels=100, kernel_size=(10,1), padding='same')
         self.pool3 = nn.MaxPool2d(kernel_size=(3, 1), padding=(1,0), stride=1)
         self.batchnorm3 = nn.BatchNorm2d(num_features=100)
+        self.dropout3 = nn.Dropout(p=0.4)
         
         # Conv layer 4
         self.conv4 = nn.Conv2d(in_channels=100, out_channels=200, kernel_size=(10,1), padding='same')
         self.pool4 = nn.MaxPool2d(kernel_size=(3, 1), padding=(1,0), stride=1)
         self.batchnorm4 = nn.BatchNorm2d(num_features=200)
+        self.dropout4 = nn.Dropout(p=0.4)
         
         # Affine layer
         self.affine = nn.Linear(200*250*1,4)
         
     def forward(self,x):
         # Each layer does conv -> relu -> pool -> batchnorm
-        x = self.batchnorm1(self.pool1(F.relu(self.conv1(x))))
-        x = self.batchnorm2(self.pool2(F.relu(self.conv2(x))))
-        x = self.batchnorm3(self.pool3(F.relu(self.conv3(x))))
-        x = self.batchnorm4(self.pool4(F.relu(self.conv4(x))))
+        x = self.dropout1(self.batchnorm1(self.pool1(F.relu(self.conv1(x)))))
+        x = self.dropout2(self.batchnorm2(self.pool2(F.relu(self.conv2(x)))))
+        x = self.dropout3(self.batchnorm3(self.pool3(F.relu(self.conv3(x)))))
+        x = self.dropout4(self.batchnorm4(self.pool4(F.relu(self.conv4(x)))))
       
         # Flatten and pass through affine layer to get a vector (4,1) vector to pass into the softmax function per example.
         x = torch.flatten(x, 1)
