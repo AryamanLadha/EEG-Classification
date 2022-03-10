@@ -37,7 +37,7 @@ def _LSTM_(input_dim, hidden_dim, layer_dim, output_dim, criterion, num_epochs):
         optimizer.zero_grad() #caluclate the gradient, manually setting to 0
 
         # obtain the loss function
-        loss = criterion(outputs, y_train)
+        loss = criterion(outputs.double(), y_train.double())
 
         loss.backward() #calculates the loss of the loss function
 
@@ -55,9 +55,9 @@ def _LSTM_(input_dim, hidden_dim, layer_dim, output_dim, criterion, num_epochs):
         valid_loss.append(valid_l)
         test_loss.append(test_l)
         
-        if epoch % 2 == 0:
+        if epoch % 4 == 0:
             
-            print("Epoch: %d, loss: %1.5f" % (epoch, loss.item()))#,'valid acc: %1.5f', valid_acc, 'test_acc: %1.5f', test_acc)
+            print("Epoch: %d, loss: %1.5f" % (epoch, loss.item()),'valid acc: %1.5f', valid_acc, 'test_acc: %1.5f', test_acc)
 
     return train_acc, valid_acc, test_acc, train_loss, valid_loss, test_loss
 
@@ -88,7 +88,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=1,
 
 
 
-num_epochs = 20 #1000 epochs
+num_epochs = 40 #1000 epochs
 learning_rate = 0.1 #0.001 lr
 
 feature_dim = X_train.shape[2]#(X_train.shape[1],X_train.shape[2]) #number of features
@@ -101,7 +101,7 @@ layer_dim = 1 #number of stacked lstm layers
 output_dim = 4 #number of output classes
 seq_dim = 250  # Number of steps to unroll
 
-criterion = torch.nn.L1Loss()
+criterion = torch.nn.L1Loss() #try MSELoss too
 
 train_acc, valid_acc, test_acc, train_loss, valid_loss, test_loss = _LSTM_(input_dim, hidden_dim, layer_dim, output_dim, criterion, num_epochs)
 
