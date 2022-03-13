@@ -5,17 +5,32 @@ import matplotlib.pyplot as plt
 
 torch.set_default_tensor_type(torch.DoubleTensor)
 
-from networks.rnn import LSTMModel
-from utils.preprocess import getData
+from networks.rnn import *
 from utils.validate import validate
 from utils.test_accuracy import test
 
+def get_idxs(in_array, to_find):
+    """Utility function for finding the positions of observations of one array in another an array.
+    Args:
+        in_array (array): Array in which to locate elements of to_find
+        to_find (array): Array of elements to locate in in_array
+    Returns:
+        TYPE: Indices of all elements of to_find in in_array
+    """
+    targets = ([np.where(in_array == x) for x in to_find])
+    return np.squeeze(np.concatenate(targets, axis=1))
 
 def _LSTM_(input_dim, hidden_dim, layer_dim, output_dim, criterion, num_epochs):
+    """
+    Here you can switch between LSTMModel and LSTM_CNN.
+    Just note that LSTMModel has different input size so don't forget to check dimensions
+    """
 
-    model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim)
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    #model = LSTMModel(input_dim, hidden_dim, layer_dim, output_dim)
     
+    model = LSTM_CNN(input_dim, hidden_dim, layer_dim, output_dim)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    print(model)
     
     stats = {
     'train_accuracies': [],
@@ -89,20 +104,35 @@ def _LSTM_(input_dim, hidden_dim, layer_dim, output_dim, criterion, num_epochs):
         
     
     return stats
-
+######################################  HYPERPARAMETERS #######################
 batch_size=10
-num_epochs = 50 #1000 epochs
+num_epochs = 20 
 learning_rate = 0.01 #0.001 lr
-hidden_dim = 2 #number of features in hidden state
+hidden_dim = 4 #number of features in hidden state
 layer_dim = 1 #number of stacked lstm layers
-
+###############################################################################
 
 X_train, y_train, X_valid, y_valid, X_test, y_test, person_train, person_valid, person_test, original = getData()
-#we need (N, 250, 22) #(N,L,H) input of batch_dim x seq_dim x feature_dim
+############################## keep specific subjects ##########################
+idx_train = get_idxs(person_train, np.array([1]))[0]
+idx_test = get_idxs(person_test, np.array([1]))[0]
+X_train = X_train[idx_train,...]
+X_test = X_test[idx_test,...]
+y_train = y_train[idx_train,...]
+y_test = y_test[idx_test,...]
+
+###################################### INPUT RESHAPING ########################
+#LSTM: we need (N, 250, 22) #(N,L,H) input of batch_dim x seq_dim x feature_dim
+"""
 X_train = torch.reshape(X_train, (X_train.shape[0], X_train.shape[2], X_train.shape[1]))
 X_valid= torch.reshape(X_valid, (X_valid.shape[0], X_valid.shape[2], X_valid.shape[1]))
 X_test= torch.reshape(X_test, (X_test.shape[0], X_test.shape[2], X_test.shape[1]))
-
+"""
+#CNN_LSTM: 
+X_train = torch.reshape(X_train, (X_train.shape[0], X_train.shape[1], X_train.shape[2]))
+X_valid= torch.reshape(X_valid, (X_valid.shape[0], X_valid.shape[1], X_valid.shape[2]))
+X_test= torch.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2]))   
+################################################################################
 
 
 trainset = torch.utils.data.TensorDataset(X_train,y_train)
@@ -132,22 +162,23 @@ criterion = torch.nn.MSELoss()#torch.nn.L1Loss()
 stats = _LSTM_(input_dim, hidden_dim, layer_dim, output_dim, criterion, num_epochs)
 
 
-acc_name = 'figures/lstm_acc_hid_'+str(hidden_dim)+'_lay_'+str(layer_dim)+'_loss_'+'MSE'+'_lr_'+str(learning_rate)+'_batch_'+str(batch_size)+'.png'
+acc_name = 'figures/1_lstm_cnn_acc_hid_'+str(hidden_dim)+'_lay_'+str(layer_dim)+'_loss_'+'MSE'+'_lr_'+str(learning_rate)+'_batch_'+str(batch_size)+'.png'
 
 plt.figure()
 plt.plot(stats['train_accuracies'])
 plt.plot(stats['val_accuracies'])
 
 plt.legend(['train','validation'])
-plt.title('Accuracy')
+plt.title('subject1 Accuracy')
 plt.savefig(acc_name)
 
-loss_name = 'figures/lstm_loss_hid_'+str(hidden_dim)+'_lay_'+str(layer_dim)+'_loss_'+'MSE'+'_lr_'+str(learning_rate)+'_batch_'+str(batch_size)+'.png'
+loss_name = 'figures/1_lstm_cnn_loss_hid_'+str(hidden_dim)+'_lay_'+str(layer_dim)+'_loss_'+'MSE'+'_lr_'+str(learning_rate)+'_batch_'+str(batch_size)+'.png'
 plt.figure()
 plt.plot(stats['train_losses'])
 plt.plot(stats['val_losses'])
 
 plt.legend(['train','validation'])
-plt.title('loss')
+plt.title('subject1 loss')
 plt.savefig(loss_name)
 
+#don't forget to edit figure names, here it's subject specific
