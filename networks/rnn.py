@@ -74,11 +74,17 @@ class RNN:
 """
 import torch #pytorch
 import torch.nn as nn
-from torch.autograd import Variable 
+from torch.autograd import Variable
+import torch.nn.functional as F 
 
 #input of batch_dim x seq_dim x feature_dim   
 #torch.set_default_tensor_type(torch.DoubleTensor)     
 class LSTMModel(nn.Module):
+    """
+    input_dim = 22
+    output_dim = 4 #number of output classes
+    seq_dim = 250
+    """
     def __init__(self, input_dim, hidden_dim, layer_dim, output_dim):
         super(LSTMModel, self).__init__()
         # Hidden dimensions
@@ -114,3 +120,42 @@ class LSTMModel(nn.Module):
         out = self.fc(out[:, -1, :]) 
         # out.size() --> 100, 10
         return out
+    
+class LSTM_CNN(nn.Module):
+
+    """
+    
+    Our input (C,H,W) is (22,250,1)
+    
+       
+    input_dim = 22
+    output_dim = 4 #number of output classes
+    seq_dim = 250
+    
+    
+    """
+    
+    def __init__(self, input_dim, hidden_dim, layer_dim, output_dim):
+        super(LSTM_CNN, self).__init__()
+        self.conv1 = torch.nn.Conv1d(in_channels=22, out_channels=64, kernel_size=5)
+        self.conv2 = torch.nn.Conv1d(in_channels=64,out_channels=128, kernel_size=5)
+        self.conv3 = torch.nn.Conv1d(in_channels=128, out_channels=256, kernel_size=5)
+        
+        self.lstm1 = torch.nn.LSTM(
+            input_size=238 ,
+            hidden_size=hidden_dim,
+            num_layers=layer_dim,
+        )
+        self.fc2 = torch.nn.Linear(hidden_dim, output_dim)
+
+    def forward(self, x):
+        
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x,_ = self.lstm1(x)
+        x = x[:, -1, :]
+        x = self.fc2(x)
+        return (x)
+
+    
