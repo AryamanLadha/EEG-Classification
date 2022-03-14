@@ -12,8 +12,8 @@ def validate(network, valloader, criterion):
     total = 0.0
     for i, data in enumerate(valloader, 0):
         inputs, labels = data
-        inputs = inputs.double() #has to be double to work with torch.nn criterion
-        labels = labels.double()
+        inputs = inputs.float() #has to be double to work with torch.nn criterion
+        labels = labels.float()
 
         outputs = network(inputs)
         loss = criterion(outputs, labels)

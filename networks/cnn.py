@@ -316,3 +316,83 @@ class DeepCNN(nn.Module):
         
         return x
     
+    
+class VariableFiltersCNN(nn.Module):
+    """
+    A convolutional neural network. All filters are the same size, but different layers have different number of filters.
+    We pad to keep the height and width of the output the same as the input.
+    We use a relu activation function after each convolutional layer.
+    
+    Our input (C,H,W) is (22,250,1)
+    
+    The model architecture is:
+
+    [conv-relu-pool-batchnorm-droput]X4 - affine -> output into softmax
+    
+    The number of filters for each convolutional layer can be varied in this network.
+    
+    
+    """
+    
+    def __init__(self, filter_size=(10,1), dropout=0.4, filters=[25, 50, 100, 200]):
+        super().__init__()
+        
+        # (22,250,1)
+        
+        # filters is an array where filters[i] is the number of filters for the (i+1)'th layer.
+        
+        # Conv layer 1
+        self.conv1 = nn.Conv2d(in_channels=22, out_channels=filters[0], kernel_size=filter_size, padding='same') 
+        self.pool1 = nn.MaxPool2d(kernel_size=(3, 1), padding=(1,0), stride=1)
+        self.batchnorm1 = nn.BatchNorm2d(num_features=filters[0])
+        self.dropout1 = nn.Dropout(p=dropout)
+        
+        # (25,250,1)
+        
+        
+        # Conv layer 2
+        self.conv2 = nn.Conv2d(in_channels=filters[0], out_channels=filters[1], kernel_size=filter_size, padding='same')
+        self.pool2 = nn.MaxPool2d(kernel_size=(3, 1), padding=(1,0), stride=1)
+        self.batchnorm2 = nn.BatchNorm2d(num_features=filters[1])
+        self.dropout2 = nn.Dropout(p=dropout)
+        
+        # (50,250,1)
+        
+        # Conv layer 3
+        self.conv3 = nn.Conv2d(in_channels=filters[1], out_channels=filters[2], kernel_size=filter_size, padding='same')
+        self.pool3 = nn.MaxPool2d(kernel_size=(3, 1), padding=(1,0), stride=1)
+        self.batchnorm3 = nn.BatchNorm2d(num_features=filters[2])
+        self.dropout3 = nn.Dropout(p=dropout)
+        
+         # (100,250,1)
+        
+        # Conv layer 4
+        self.conv4 = nn.Conv2d(in_channels=filters[2], out_channels=filters[3], kernel_size=filter_size, padding='same')
+        self.pool4 = nn.MaxPool2d(kernel_size=(3, 1), padding=(1,0), stride=1)
+        self.batchnorm4 = nn.BatchNorm2d(num_features=filters[3])
+        self.dropout4 = nn.Dropout(p=dropout)
+      
+        # (200,250,1)
+        
+        # Affine layer
+        self.affine = nn.Linear(filters[3]*250*1,4)
+        
+    def forward(self,x):
+        
+        # Each layer does conv -> relu -> pool -> batchnorm
+        x = self.dropout1(self.batchnorm1(self.pool1(F.relu(self.conv1(x)))))
+        
+        x = self.dropout2(self.batchnorm2(self.pool2(F.relu(self.conv2(x)))))
+        
+        x = self.dropout3(self.batchnorm3(self.pool3(F.relu(self.conv3(x)))))
+        
+        x = self.dropout4(self.batchnorm4(self.pool4(F.relu(self.conv4(x)))))
+        
+      
+        # Flatten and pass through affine layer to get a vector (4,1) vector to pass into the softmax function per example.
+        x = torch.flatten(x, 1)
+        x = self.affine(x)
+        
+        
+        return x
+    
