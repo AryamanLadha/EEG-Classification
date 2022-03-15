@@ -115,10 +115,14 @@ layer_dim = 1 #number of stacked lstm layers
 X_train, y_train, X_valid, y_valid, X_test, y_test, person_train, person_valid, person_test, original = getData()
 ############################## keep specific subjects ##########################
 idx_train = get_idxs(person_train, np.array([1]))[0]
+idx_valid = get_idxs(person_valid, np.array([1]))[0]
 idx_test = get_idxs(person_test, np.array([1]))[0]
+
 X_train = X_train[idx_train,...]
+X_valid = X_valid[idx_valid,...]
 X_test = X_test[idx_test,...]
 y_train = y_train[idx_train,...]
+y_valid = y_valid[idx_valid,...]
 y_test = y_test[idx_test,...]
 
 ###################################### INPUT RESHAPING ########################
