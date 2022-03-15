@@ -31,8 +31,8 @@ def compute_test_outputs(network, testloader, y_test):
     # Batch size is one, so every batch contains exactly one example.
     for i, data in enumerate(testloader, 0):
         inputs, labels = data
-        inputs = inputs.float()
-        labels = labels.float()
+        inputs = inputs.double()
+        labels = labels.double()
 
         batch_output = network(inputs)
         total_output[i] = batch_output[0]

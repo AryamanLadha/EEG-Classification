@@ -4,6 +4,21 @@ import torch.nn.functional as F
 from tensorflow.keras.utils import to_categorical
 import tensorflow as tf
 
+def get_idxs(in_array, to_find):
+    """Utility function for finding the positions of observations of one array in another an array.
+
+    Args:
+        in_array (array): Array in which to locate elements of to_find
+        to_find (array): Array of elements to locate in in_array
+
+    Returns:
+        TYPE: Indices of all elements of to_find in in_array
+    """
+    targets = ([np.where(in_array == x) for x in to_find])
+    return np.squeeze(np.concatenate(targets, axis=1))
+
+
+
 def data_prep(X,y,sub_sample,average,noise):
     """
     Preprocess data using Tonmoy's discussion 9A code.
@@ -47,7 +62,7 @@ def data_prep(X,y,sub_sample,average,noise):
     return total_X,total_y
 
 
-def getData(lib='tensorflow'):
+def getData(lib='tensorflow', subject=None):
     """
     Load the data from the .npy files, preprocess it, and return it.
     We return data in the form (N,C,H,W), since this is the format used by Pytorch's convolutional layers
@@ -83,27 +98,39 @@ def getData(lib='tensorflow'):
     y_train_valid -= 769
     y_test -= 769
     
+    ## If working with a specific person, only select their data
+    if(subject != None):
+        idx_train = get_idxs(person_train_valid, np.array(subject))[0]
+        idx_test = get_idxs(person_test, np.array(subject))[0]
+        X_train_valid = X_train_valid[idx_train,...]
+        X_test = X_test[idx_test,...]
+        y_train_valid = y_train_valid[idx_train,...]
+        y_test = y_test[idx_test,...]
+        
+   
     original = {'y_test': y_test}
-    
     
     # Preprocess
     X_train_valid_prep,y_train_valid_prep = data_prep(X_train_valid,y_train_valid,2,2,True)
     X_test_prep,y_test_prep = data_prep(X_test,y_test,2,2,True)
-    person_train_valid_prep = np.concatenate([person_train_valid]*4)
-    person_test_prep = np.concatenate([person_test]*4)
+    # person_train_valid_prep = np.concatenate([person_train_valid]*4)
+    # person_test_prep = np.concatenate([person_test]*4)
     
     
+    # print(f'Shape is now:{X_train_valid.shape}')
+    # print(X_train_valid[0])
+    num_training_samples = int(X_train_valid.shape[0])
+    num_val_samples = int(num_training_samples//5)
     # First generating the training and validation indices using random splitting
-    ind_valid = np.random.choice(8460, 1500, replace=False)
-    ind_train = np.array(list(set(range(8460)).difference(set(ind_valid))))
-   
-
+    ind_valid = np.random.choice(num_training_samples,num_val_samples, replace=True)
+    ind_train = np.array(list(set(range(num_training_samples)).difference(set(ind_valid))))
+    
+    #print('ind train is: ')
+    #print(ind_train)
     # Creating the training and validation sets using the generated indices
     (x_train, x_valid) = X_train_valid_prep[ind_train], X_train_valid_prep[ind_valid] 
     (y_train, y_valid) = y_train_valid_prep[ind_train], y_train_valid_prep[ind_valid]
-    (person_train, person_valid) = person_train_valid_prep[ind_train], person_train_valid_prep[ind_valid]
-    
-    
+    # (person_train, person_valid) = person_train_valid_prep[ind_train], person_train_valid_prep[ind_valid]
     
  
     if (lib == 'torch'):
@@ -123,9 +150,9 @@ def getData(lib='tensorflow'):
         x_valid = torch.from_numpy(x_valid)
         x_test = torch.from_numpy(x_test)
 
-        person_train = torch.from_numpy(person_train)
-        person_valid = torch.from_numpy(person_valid)
-        person_test = torch.from_numpy(person_test)
+        #person_train = torch.from_numpy(person_train)
+        #person_valid = torch.from_numpy(person_valid)
+        #person_test = torch.from_numpy(person_test)
         
     
     elif(lib == 'tensorflow' or lib == 'keras'):
@@ -160,12 +187,12 @@ def getData(lib='tensorflow'):
         x_test = tf.convert_to_tensor(x_test)
         y_test = tf.convert_to_tensor(y_test)
 
-        person_train = tf.convert_to_tensor(person_train)
-        person_valid = tf.convert_to_tensor(person_valid)
-        person_test = tf.convert_to_tensor(person_test)
+        #person_train = tf.convert_to_tensor(person_train)
+        #person_valid = tf.convert_to_tensor(person_valid)
+        #person_test = tf.convert_to_tensor(person_test)
         
     
-    return x_train, y_train, x_valid, y_valid, x_test, y_test, person_train, person_valid, person_test, original
+    return x_train, y_train, x_valid, y_valid, x_test, y_test, original
     
     
     
