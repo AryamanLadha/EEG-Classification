@@ -100,7 +100,7 @@ class OptimizedCNN(nn.Module):
         self.batchnorm2 = nn.BatchNorm2d(num_features=50)
         self.dropout2 = nn.Dropout(p=dropout)
         
-        self.pool1 =  nn.MaxPool2d(kernel_size=(10, 1))
+        self.pool1 =  nn.MaxPool2d(kernel_size=(3, 1),padding=(1,0), stride=1)
         
         # Conv layer 3
         self.conv3 = nn.Conv2d(in_channels=50, out_channels=100, kernel_size=filter_size, padding='same')
@@ -112,7 +112,7 @@ class OptimizedCNN(nn.Module):
         self.batchnorm4 = nn.BatchNorm2d(num_features=200)
         self.dropout4 = nn.Dropout(p=dropout)
         
-        self.pool2 = nn.MaxPool2d(kernel_size=(10, 1))
+        self.pool2 = nn.MaxPool2d(kernel_size=(3, 1),padding=(1,0), stride=1)
         
         # Affine layer
         self.affine = nn.Linear(200*250*1,4)
@@ -122,27 +122,36 @@ class OptimizedCNN(nn.Module):
         # [conv-batchnorm-relu-dropout-conv-batchnorm-relu-dropout]
         
         # (22,250,1)
+        #print(x.shape)
         x = self.dropout1(self.batchnorm1(F.relu(self.conv1(x))))
+        #print(x.shape)
         x = self.dropout2(self.batchnorm2(F.relu(self.conv2(x))))
+        #print(x.shape)
         
         # pool
         
         # (22,250,1)
         x = self.pool1(x)
+        #print(x.shape)
         
         #
        
         # [conv-batchnorm-relu-dropout-conv-batchnorm-relu-dropout]
         x = self.dropout3(self.batchnorm3(F.relu(self.conv3(x))))
+        #print(x.shape)
         x = self.dropout4(self.batchnorm4(F.relu(self.conv4(x))))
+        #print(x.shape)
         
         
         # pool
         x = self.pool2(x)
+        #print(x.shape)
         
         # Flatten and pass through affine layer to get a vector (4,1) vector to pass into the softmax function per example.
         x = torch.flatten(x, 1)
+        #print(x.shape)
         x = self.affine(x)
+        #print(x.shape)
         
         return x
     
